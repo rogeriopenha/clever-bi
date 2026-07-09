@@ -302,7 +302,7 @@ def tela_dashboards():
                 st.markdown(f"""
                     <div style="background:#1a2340;padding:1rem;border-radius:12px;margin-bottom:0.5rem;border:1px solid #2a3450">
                         <h3 style="color:#e8edf5;margin:0">{dash['nome']}</h3>
-                        <p style="color:#6b7fa3;font-size:0.8rem">{dash.get('descricao', 'Sem descrição')[:80]}</p>
+                        <p style="color:#6b7fa3;font-size:0.8rem">{(dash.get('descricao') or 'Sem descrição')[:80]}</p>
                     </div>
                 """, unsafe_allow_html=True)
                 c1, c2 = st.columns(2)
