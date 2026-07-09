@@ -230,10 +230,9 @@ def css_tema() -> str:
         section[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] {{
             min-height: 24px !important;
         }}
-        /* Esconder toolbar superior do Streamlit (mantém botão recolher/expandir sidebar) */
+        /* Esconder apenas o menu hamburger e deploy, mantém botão recolher/expandir */
         #MainMenu {{ visibility: hidden; display: none; }}
         .stDeployButton, .stAppDeployButton {{ display: none !important; }}
-        div[data-testid="stToolbar"] {{ display: none !important; }}
     </style>
     """
 
