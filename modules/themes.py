@@ -230,13 +230,11 @@ def css_tema() -> str:
         section[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] {{
             min-height: 24px !important;
         }}
-        /* Esconder toolbar superior do Streamlit */
+        /* Esconder toolbar superior do Streamlit (mantém botão recolher sidebar) */
         #MainMenu {{ visibility: hidden; display: none; }}
         .stDeployButton, .stAppDeployButton {{ display: none !important; }}
-        header[data-testid="stHeader"] {{ display: none !important; }}
         div[data-testid="stToolbar"] {{ display: none !important; }}
-        button[kind="header"] {{ display: none !important; }}
-        .st-emotion-cache-1dp5vir {{ display: none !important; }}
+        button[kind="headerNoPadding"] {{ display: none !important; }}
     </style>
     """
 
