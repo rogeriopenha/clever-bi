@@ -14,7 +14,10 @@ def gerenciar_fontes():
     with tab_nova:
         with st.form("nova_fonte"):
             nome = st.text_input("Nome da fonte", placeholder="Ex: Vendas Copastur")
-            tipo = st.selectbox("Tipo", ["api", "supabase", "google_sheets", "csv"])
+            tipo = st.selectbox("Tipo", [
+                "api", "mysql", "sql_server", "postgresql", "mongodb",
+                "supabase", "google_sheets", "excel", "csv"
+            ])
             config = {}
 
             if tipo == "api":
@@ -54,12 +57,66 @@ def gerenciar_fontes():
                     help='Ex: {"Accept": "application/json"}'
                 )
 
+            elif tipo == "mysql":
+                st.markdown("**🐬 MySQL**")
+                config["host"] = st.text_input("Host", value="localhost", placeholder="localhost")
+                config["port"] = st.number_input("Porta", value=3306, min_value=1, max_value=65535)
+                config["database"] = st.text_input("Banco de Dados", placeholder="meu_banco")
+                config["user"] = st.text_input("Usuário", placeholder="root")
+                config["password"] = st.text_input("Senha", type="password")
+                config["query"] = st.text_area("Query SQL", placeholder="SELECT * FROM vendas LIMIT 100",
+                    help="Query para extrair os dados")
+
+            elif tipo == "sql_server":
+                st.markdown("**🗄️ SQL Server**")
+                config["host"] = st.text_input("Host", value="localhost", placeholder="localhost")
+                config["port"] = st.number_input("Porta", value=1433, min_value=1, max_value=65535)
+                config["database"] = st.text_input("Banco de Dados", placeholder="meu_banco")
+                config["user"] = st.text_input("Usuário", placeholder="sa")
+                config["password"] = st.text_input("Senha", type="password")
+                config["query"] = st.text_area("Query SQL", placeholder="SELECT * FROM vendas LIMIT 100",
+                    help="Query para extrair os dados")
+
+            elif tipo == "postgresql":
+                st.markdown("**🐘 PostgreSQL**")
+                config["host"] = st.text_input("Host", value="localhost", placeholder="localhost")
+                config["port"] = st.number_input("Porta", value=5432, min_value=1, max_value=65535)
+                config["database"] = st.text_input("Banco de Dados", placeholder="meu_banco")
+                config["user"] = st.text_input("Usuário", placeholder="postgres")
+                config["password"] = st.text_input("Senha", type="password")
+                config["query"] = st.text_area("Query SQL", placeholder="SELECT * FROM vendas LIMIT 100",
+                    help="Query para extrair os dados")
+
+            elif tipo == "mongodb":
+                st.markdown("**🍃 MongoDB**")
+                config["uri"] = st.text_input("Connection String (URI)",
+                    placeholder="mongodb://usuario:senha@localhost:27017/meu_banco")
+                config["database"] = st.text_input("Banco de Dados", placeholder="meu_banco")
+                config["collection"] = st.text_input("Coleção", placeholder="vendas")
+                config["query"] = st.text_area("Filtro (JSON)", value="{}",
+                    help='Ex: {"status": "ativo"}')
+
             elif tipo == "google_sheets":
+                st.markdown("**📊 Google Sheets**")
                 config["url"] = st.text_input("URL da planilha", placeholder="https://docs.google.com/spreadsheets/d/...")
                 config["aba"] = st.text_input("Aba (opcional)", placeholder="Sheet1")
 
+            elif tipo == "excel":
+                st.markdown("**📗 Excel**")
+                arquivo = st.file_uploader("Upload do arquivo Excel", type=["xlsx", "xls"])
+                if arquivo:
+                    config["nome_arquivo"] = arquivo.name
+                    df = load_csv(arquivo)
+                    if not df.empty:
+                        st.dataframe(df.head(), use_container_width=True)
+                        config["colunas"] = list(df.columns)
+                        config["planilha"] = st.text_input("Planilha/Aba", placeholder="Sheet1",
+                            help="Nome da planilha dentro do arquivo (opcional)")
+                        st.session_state["excel_temp_" + nome] = df.to_json()
+
             elif tipo == "csv":
-                arquivo = st.file_uploader("Upload do arquivo", type=["csv", "xlsx"])
+                st.markdown("**📄 CSV**")
+                arquivo = st.file_uploader("Upload do arquivo", type=["csv", "tsv"])
                 if arquivo:
                     config["nome_arquivo"] = arquivo.name
                     df = load_csv(arquivo)
