@@ -4,7 +4,12 @@ st.set_page_config(
     page_title="CLEVER-BI",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': None,
+        'Report a Bug': None,
+        'About': None
+    }
 )
 
 if "pagina" not in st.session_state:
@@ -16,7 +21,7 @@ if "tema" not in st.session_state:
 
 from modules.auth import verificar_login, fazer_logout
 from modules.themes import css_tema, get_cores, seletor_tema
-from modules.i18n import t, seletor_idioma_sidebar, IDIOMAS
+from modules.i18n import t, IDIOMAS
 
 # CSS dinâmico do tema
 st.markdown(css_tema(), unsafe_allow_html=True)
@@ -34,22 +39,23 @@ if user:
             </div>
         """, unsafe_allow_html=True)
 
-        # Seletor de idioma com bandeiras
+        # Seletor de idioma compacto: bandeira atual + dropdown
         idioma_atual = st.session_state.get("idioma", "pt-br")
         info_atual = IDIOMAS.get(idioma_atual, IDIOMAS["pt-br"])
         idiomas_lista = list(IDIOMAS.items())
-        linhas = [idiomas_lista[i:i+5] for i in range(0, len(idiomas_lista), 5)]
-        for linha in linhas:
-            cols = st.columns(len(linha))
-            for ci, (cod, info) in enumerate(linha):
-                with cols[ci]:
-                    ativo = cod == idioma_atual
-                    if st.button(info["bandeira"], key=f"flag_{cod}", help=info["nome"],
-                                 use_container_width=True,
-                                 type="primary" if ativo else "secondary"):
-                        if cod != idioma_atual:
-                            st.session_state.idioma = cod
-                            st.rerun()
+        opcoes = {k: f"{v['bandeira']}  {v['nome_nativo']}" for k, v in IDIOMAS.items()}
+        idx = next((i for i, (k, _) in enumerate(idiomas_lista) if k == idioma_atual), 0)
+        escolha = st.selectbox(
+            "Idioma",
+            options=list(opcoes.keys()),
+            format_func=lambda k: opcoes[k],
+            index=idx,
+            key="lang_sidebar",
+            label_visibility="collapsed"
+        )
+        if escolha and escolha != idioma_atual:
+            st.session_state.idioma = escolha
+            st.rerun()
 
         st.markdown("---")
 

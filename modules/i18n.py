@@ -383,39 +383,3 @@ def t(chave: str) -> str:
 
 def token_label(token: str) -> str:
     return t(f"token.{token}")
-
-def seletor_idioma():
-    st.markdown(t("config.idioma"))
-    idioma_atual = get_idioma()
-    opcoes = {k: f"{v['bandeira']} {v['nome']}" for k, v in IDIOMAS.items()}
-    escolha = st.selectbox(
-        "Idioma",
-        options=list(opcoes.keys()),
-        format_func=lambda k: opcoes[k],
-        index=list(opcoes.keys()).index(idioma_atual) if idioma_atual in opcoes else 0,
-        key="lang_selector",
-        label_visibility="collapsed"
-    )
-    if escolha and escolha != idioma_atual:
-        st.session_state.idioma = escolha
-        st.rerun()
-
-def seletor_idioma_sidebar():
-    idioma_atual = get_idioma()
-    info_atual = IDIOMAS.get(idioma_atual, IDIOMAS[IDIOMA_PADRAO])
-    idiomas_lista = list(IDIOMAS.items())
-
-    # Mostrar bandeiras em grid 5x2
-    linhas = [idiomas_lista[i:i+5] for i in range(0, len(idiomas_lista), 5)]
-    for linha in linhas:
-        cols = st.columns(len(linha))
-        for ci, (cod, info) in enumerate(linha):
-            ativo = cod == idioma_atual
-            rotulo = f"{info['bandeira']}"
-            with cols[ci]:
-                if st.button(rotulo, key=f"flag_{cod}", help=info["nome"],
-                             use_container_width=True,
-                             type="primary" if ativo else "secondary"):
-                    if cod != idioma_atual:
-                        st.session_state.idioma = cod
-                        st.rerun()

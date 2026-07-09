@@ -218,6 +218,13 @@ def css_tema() -> str:
             border-color: {c["border"]};
         }}
         .st-bv, .st-bu {{ border-color: {c["border"]}; }}
+        /* Esconder toolbar superior do Streamlit */
+        #MainMenu {{ visibility: hidden; display: none; }}
+        .stDeployButton, .stAppDeployButton {{ display: none !important; }}
+        header[data-testid="stHeader"] {{ display: none !important; }}
+        div[data-testid="stToolbar"] {{ display: none !important; }}
+        button[kind="header"] {{ display: none !important; }}
+        .st-emotion-cache-1dp5vir {{ display: none !important; }}
     </style>
     """
 
