@@ -5,6 +5,7 @@ from datetime import datetime
 from modules.database import insert_record, update_record, delete_record, query_native, get_tenant_id, current_user, load_csv
 from modules.widgets import render_widget, editor_widget
 from modules.data_sources import preview_fonte, listar_datasets, criar_dataset
+from modules.i18n import t
 
 def listar_dashboards():
     tenant_id = get_tenant_id()
@@ -264,14 +265,14 @@ def editar_dashboard(dashboard_id: str):
     render_dashboard(dashboard_id)
 
 def tela_dashboards():
-    st.markdown("""
-        <h1 style="color:#e8edf5">📊 CLEVER-BI</h1>
-        <p style="color:#6b7fa3">Dashboards inteligentes para suas decisões</p>
+    st.markdown(f"""
+        <h1 style="color:#e8edf5">{t('dash.titulo')}</h1>
+        <p style="color:#6b7fa3">{t('dash.subtitulo')}</p>
     """, unsafe_allow_html=True)
 
     col1, col2 = st.columns([3, 1])
     with col2:
-        if st.button("➕ Novo Dashboard", type="primary", use_container_width=True):
+        if st.button(t("dash.novo"), type="primary", use_container_width=True):
             st.session_state.novo_dashboard = True
 
     if st.session_state.get("novo_dashboard"):
@@ -292,7 +293,7 @@ def tela_dashboards():
 
     dashboards = listar_dashboards()
     if dashboards.empty:
-        st.info("Nenhum dashboard ainda. Crie o primeiro!")
+        st.info(t("dash.vazio"))
         return
 
     cols = st.columns(3)

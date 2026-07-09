@@ -91,10 +91,12 @@ Resposta:"""
         return f"Com base nos dados, o total é {total:,.0f}. Consulte os gráficos para mais detalhes."
     return "Não foi possível processar sua pergunta com os dados disponíveis."
 
+from modules.i18n import t
+
 def chat_ia_screen():
-    st.markdown("""
-        <h1 style="color:#e8edf5">🧠 IA</h1>
-        <p style="color:#6b7fa3">Faça perguntas sobre seus dados em linguagem natural</p>
+    st.markdown(f"""
+        <h1 style="color:#e8edf5">{t('ia.titulo')}</h1>
+        <p style="color:#6b7fa3">{t('ia.subtitulo')}</p>
     """, unsafe_allow_html=True)
 
     if "chat_history" not in st.session_state:

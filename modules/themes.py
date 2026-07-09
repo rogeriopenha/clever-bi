@@ -1,5 +1,6 @@
 import streamlit as st
 import json
+from modules.i18n import t, token_label
 
 TEMAS_PADRAO = {
     "clever_dark": {
@@ -241,19 +242,19 @@ def seletor_tema():
     tema_obj = temas.get(tema_atual)
     if tema_obj:
         cores = {k: v for k, v in tema_obj.items() if k not in ("nome", "icone")}
-        st.markdown("**Cores do tema atual:**")
+        st.markdown(f"**{t('tema.cores_atuais')}:**")
         cols = st.columns(4)
         for i, (chave, valor) in enumerate(sorted(cores.items())):
             with cols[i % 4]:
                 st.markdown(
                     f'<div style="display:flex;align-items:center;gap:6px;margin:2px 0">'
                     f'<div style="width:16px;height:16px;border-radius:3px;background:{valor};border:1px solid #555"></div>'
-                    f'<span style="font-size:0.75rem">{chave}</span>'
+                    f'<span style="font-size:0.75rem">{token_label(chave)}</span>'
                     f'</div>',
                     unsafe_allow_html=True
                 )
 
-    with st.expander("✏️ Criar / Editar tema personalizado"):
+    with st.expander(t("tema.criar_editar")):
         editor_tema_custom()
 
 def editor_tema_custom():
@@ -271,21 +272,21 @@ def editor_tema_custom():
         col1, col2 = st.columns(2)
         cores_editadas = {}
         tokens_mostrar = [
-            ("bg_primary", "Fundo principal"),
-            ("bg_secondary", "Fundo cards/sidebar"),
-            ("text_primary", "Texto principal"),
-            ("text_secondary", "Texto secundário"),
-            ("accent", "Cor de destaque"),
-            ("accent_hover", "Destaque hover"),
-            ("border", "Bordas"),
-            ("metric_label", "Label de métrica"),
-            ("metric_value", "Valor de métrica"),
-            ("metric_delta", "Delta de métrica"),
-            ("card_bg", "Fundo do card"),
-            ("card_border", "Borda do card"),
-            ("tab_inactive_bg", "Aba inativa fundo"),
-            ("tab_inactive_color", "Aba inativa texto"),
-            ("tab_active_bg", "Aba ativa fundo"),
+            ("bg_primary", token_label("bg_primary")),
+            ("bg_secondary", token_label("bg_secondary")),
+            ("text_primary", token_label("text_primary")),
+            ("text_secondary", token_label("text_secondary")),
+            ("accent", token_label("accent")),
+            ("accent_hover", token_label("accent_hover")),
+            ("border", token_label("border")),
+            ("metric_label", token_label("metric_label")),
+            ("metric_value", token_label("metric_value")),
+            ("metric_delta", token_label("metric_delta")),
+            ("card_bg", token_label("card_bg")),
+            ("card_border", token_label("card_border")),
+            ("tab_inactive_bg", token_label("tab_inactive_bg")),
+            ("tab_inactive_color", token_label("tab_inactive_color")),
+            ("tab_active_bg", token_label("tab_active_bg")),
         ]
 
         tema_atual = get_tema()
@@ -297,7 +298,7 @@ def editor_tema_custom():
                     key=f"cp_{tema_atual}_{token}"
                 )
 
-        salvar = st.form_submit_button("💾 Salvar tema personalizado", type="primary", use_container_width=True)
+        salvar = st.form_submit_button(t("tema.salvar"), type="primary", use_container_width=True)
 
         if salvar and nome.strip():
             chave = editando if editando else f"custom_{len([k for k in temas if k.startswith('custom_')])}"
@@ -319,7 +320,7 @@ def editor_tema_custom():
     custom = st.session_state.get(CHAVE_CUSTOM, {})
     if custom:
         st.markdown("---")
-        st.markdown("**Excluir temas personalizados**")
+        st.markdown(f"**{t('tema.excluir')}**")
         for chave in list(custom.keys()):
             col_a, col_b = st.columns([3, 1])
             with col_a:

@@ -16,6 +16,7 @@ if "tema" not in st.session_state:
 
 from modules.auth import verificar_login, fazer_logout
 from modules.themes import css_tema, get_cores, seletor_tema
+from modules.i18n import t, seletor_idioma_sidebar, IDIOMAS
 
 # CSS dinâmico do tema
 st.markdown(css_tema(), unsafe_allow_html=True)
@@ -28,23 +29,40 @@ if user:
     with st.sidebar:
         st.markdown(f"""
             <div style="text-align:center;padding:1rem 0">
-                <h1 style="color:{cores['text_primary']};font-size:1.8rem;margin:0">CLEVER</h1>
-                <p style="color:{cores['accent']};font-size:0.8rem;margin:0">Business Intelligence</p>
+                <h1 style="color:{cores['text_primary']};font-size:1.8rem;margin:0">{t('app.titulo')}</h1>
+                <p style="color:{cores['accent']};font-size:0.8rem;margin:0">{t('app.subtitulo')}</p>
             </div>
         """, unsafe_allow_html=True)
 
+        # Seletor de idioma com bandeiras
+        idioma_atual = st.session_state.get("idioma", "pt-br")
+        info_atual = IDIOMAS.get(idioma_atual, IDIOMAS["pt-br"])
+        idiomas_lista = list(IDIOMAS.items())
+        linhas = [idiomas_lista[i:i+5] for i in range(0, len(idiomas_lista), 5)]
+        for linha in linhas:
+            cols = st.columns(len(linha))
+            for ci, (cod, info) in enumerate(linha):
+                with cols[ci]:
+                    ativo = cod == idioma_atual
+                    if st.button(info["bandeira"], key=f"flag_{cod}", help=info["nome"],
+                                 use_container_width=True,
+                                 type="primary" if ativo else "secondary"):
+                        if cod != idioma_atual:
+                            st.session_state.idioma = cod
+                            st.rerun()
+
         st.markdown("---")
 
-        if st.button("📊 Dashboards", use_container_width=True, key="nav_dashboards"):
+        if st.button(t("nav.dashboards"), use_container_width=True, key="nav_dashboards"):
             st.session_state.pagina = "dashboards"
             st.rerun()
-        if st.button("🧠 IA", use_container_width=True, key="nav_ia"):
+        if st.button(t("nav.ia"), use_container_width=True, key="nav_ia"):
             st.session_state.pagina = "ia"
             st.rerun()
-        if st.button("🔌 Fontes de Dados", use_container_width=True, key="nav_fontes"):
+        if st.button(t("nav.fontes"), use_container_width=True, key="nav_fontes"):
             st.session_state.pagina = "fontes"
             st.rerun()
-        if st.button("⚙️ Configurações", use_container_width=True, key="nav_config"):
+        if st.button(t("nav.config"), use_container_width=True, key="nav_config"):
             st.session_state.pagina = "config"
             st.rerun()
 
@@ -57,7 +75,7 @@ if user:
             </div>
         """, unsafe_allow_html=True)
 
-        if st.button("🚪 Sair", use_container_width=True):
+        if st.button(t("nav.sair"), use_container_width=True):
             fazer_logout()
 
     pagina = st.session_state.pagina
@@ -69,14 +87,14 @@ if user:
     elif pagina == "dashboard_view":
         dash_id = st.session_state.get("dashboard_ativo")
         if dash_id:
-            if st.button("← Voltar", key="back_view"):
+            if st.button(t("nav.voltar"), key="back_view"):
                 st.session_state.pagina = "dashboards"
                 st.rerun()
             render_dashboard(dash_id)
     elif pagina == "dashboard_edit":
         dash_id = st.session_state.get("dashboard_ativo")
         if dash_id:
-            if st.button("← Voltar", key="back_edit"):
+            if st.button(t("nav.voltar"), key="back_edit"):
                 st.session_state.pagina = "dashboards"
                 st.rerun()
             editar_dashboard(dash_id)
@@ -88,15 +106,15 @@ if user:
         gerenciar_fontes()
     elif pagina == "config":
         st.markdown(f"""
-            <h1 style="color:{cores['text_primary']}">⚙️ Configurações</h1>
-            <p style="color:{cores['text_secondary']}">Configurações do sistema</p>
+            <h1 style="color:{cores['text_primary']}">{t('config.titulo')}</h1>
+            <p style="color:{cores['text_secondary']}">{t('config.subtitulo')}</p>
         """, unsafe_allow_html=True)
 
         seletor_tema()
 
         st.markdown("---")
-        st.markdown(f"**Usuário:** {user.get('email', '')}")
-        st.markdown(f"**Função:** {user.get('funcao', '')}")
+        st.markdown(f"**{t('config.usuario')}:** {user.get('email', '')}")
+        st.markdown(f"**{t('config.funcao')}:** {user.get('funcao', '')}")
         if st.session_state.get("tenant_id"):
             st.markdown(f"**Tenant ID:** {st.session_state.tenant_id}")
         st.markdown("---")

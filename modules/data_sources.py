@@ -3,8 +3,10 @@ import pandas as pd
 import json
 from modules.database import insert_record, query_native, get_tenant_id, current_user, load_csv
 
+from modules.i18n import t
+
 def gerenciar_fontes():
-    st.subheader("🔌 Fontes de Dados")
+    st.subheader(t("fontes.titulo"))
     tenant_id = get_tenant_id()
 
     tab_nova, tab_lista, tab_api = st.tabs(["Nova Fonte", "Fontes Existentes", "🔍 API Discovery"])
