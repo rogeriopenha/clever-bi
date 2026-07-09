@@ -32,14 +32,7 @@ if user:
     cores = get_cores()
 
     with st.sidebar:
-        st.markdown(f"""
-            <div style="text-align:center;padding:1rem 0">
-                <h1 style="color:{cores['text_primary']};font-size:1.8rem;margin:0">{t('app.titulo')}</h1>
-                <p style="color:{cores['accent']};font-size:0.8rem;margin:0">{t('app.subtitulo')}</p>
-            </div>
-        """, unsafe_allow_html=True)
-
-        # Seletor de idioma: bandeira (imagem CDN) + dropdown com nome nativo
+        # Seletor de idioma no topo (acima do título CLEVER)
         idioma_atual = st.session_state.get("idioma", "pt-br")
         info_atual = IDIOMAS.get(idioma_atual, IDIOMAS["pt-br"])
         sigla_atual = info_atual["sigla"]
@@ -49,8 +42,8 @@ if user:
         col_f, col_s = st.columns([1, 5])
         with col_f:
             st.markdown(
-                f'<img src="https://flagcdn.com/24x18/{sigla_atual}.png" '
-                f'style="width:24px;height:18px;margin-top:8px;border-radius:2px">',
+                f'<img src="https://flagcdn.com/20x15/{sigla_atual}.png" '
+                f'style="width:20px;height:15px;margin-top:4px;border-radius:2px">',
                 unsafe_allow_html=True
             )
         with col_s:
@@ -67,6 +60,13 @@ if user:
             from modules.database import save_preferences
             save_preferences(idioma=escolha)
             st.rerun()
+
+        st.markdown(f"""
+            <div style="text-align:center;padding:0.5rem 0">
+                <h1 style="color:{cores['text_primary']};font-size:1.8rem;margin:0">{t('app.titulo')}</h1>
+                <p style="color:{cores['accent']};font-size:0.8rem;margin:0">{t('app.subtitulo')}</p>
+            </div>
+        """, unsafe_allow_html=True)
 
         st.markdown("---")
 
