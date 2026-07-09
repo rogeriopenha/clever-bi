@@ -101,6 +101,24 @@ def get_tenant_id() -> str:
 def current_user() -> dict:
     return st.session_state.get("user", {})
 
+def user_id() -> str:
+    user = current_user()
+    return user.get("id", "")
+
+def save_preferences(tema: str = None, idioma: str = None) -> bool:
+    uid = user_id()
+    if not uid:
+        return False
+    data = {}
+    if tema is not None:
+        data["tema"] = tema
+    if idioma is not None:
+        data["idioma"] = idioma
+    if not data:
+        return False
+    result = update_record("usuarios", "id", uid, data)
+    return "error" not in result
+
 def log_query(tenant_id: str, usuario_id: str, tipo: str, query_text: str, rows: int, ms: int):
     insert_record("log_consultas", {
         "tenant_id": tenant_id,

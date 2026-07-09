@@ -11,8 +11,11 @@ def fazer_login(email: str, senha: str) -> bool:
                 st.session_state.supabase_client = sb
                 user_data = query_native("usuarios", filters={"email": email})
                 if not user_data.empty:
-                    st.session_state.user = user_data.iloc[0].to_dict()
-                    st.session_state.tenant_id = user_data.iloc[0]["tenant_id"]
+                    row = user_data.iloc[0]
+                    st.session_state.user = row.to_dict()
+                    st.session_state.tenant_id = row["tenant_id"]
+                    st.session_state.tema = row.get("tema", "clever_dark")
+                    st.session_state.idioma = row.get("idioma", "pt-br")
                     st.session_state.logged_in = True
                     return True
                 st.error("Usuário autenticado mas sem perfil. Contate o admin.")
@@ -47,7 +50,7 @@ def fazer_logout():
             sb.auth.sign_out()
         except Exception:
             pass
-    for key in ["user", "tenant_id", "logged_in", "pagina", "supabase_client"]:
+    for key in ["user", "tenant_id", "logged_in", "pagina", "supabase_client", "tema", "idioma"]:
         st.session_state.pop(key, None)
     st.rerun()
 

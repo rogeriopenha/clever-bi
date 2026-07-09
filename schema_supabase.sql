@@ -25,6 +25,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
   funcao TEXT DEFAULT 'viewer' CHECK (funcao IN ('admin','editor','viewer')),
   avatar_url TEXT,
   ativo BOOLEAN DEFAULT true,
+  tema TEXT DEFAULT 'clever_dark',
+  idioma TEXT DEFAULT 'pt-br',
   data_criacao TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE usuarios ENABLE ROW LEVEL SECURITY;

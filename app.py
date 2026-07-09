@@ -55,6 +55,8 @@ if user:
         )
         if escolha and escolha != idioma_atual:
             st.session_state.idioma = escolha
+            from modules.database import save_preferences
+            save_preferences(idioma=escolha)
             st.rerun()
 
         st.markdown("---")
