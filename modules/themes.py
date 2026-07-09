@@ -218,13 +218,17 @@ def css_tema() -> str:
             border-color: {c["border"]};
         }}
         .st-bv, .st-bu {{ border-color: {c["border"]}; }}
-        /* Fonte menor para o seletor de idioma na sidebar */
+        /* Fonte menor e mais compacta para o seletor de idioma na sidebar */
+        section[data-testid="stSidebar"] > div:first-child {{
+            padding-top: 0 !important;
+            margin-top: 0 !important;
+        }}
         section[data-testid="stSidebar"] .stSelectbox label,
         section[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] span {{
-            font-size: 0.75rem !important;
+            font-size: 0.65rem !important;
         }}
         section[data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] {{
-            min-height: 30px !important;
+            min-height: 24px !important;
         }}
         /* Esconder toolbar superior do Streamlit */
         #MainMenu {{ visibility: hidden; display: none; }}

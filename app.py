@@ -39,11 +39,12 @@ if user:
         opcoes_lista = list(IDIOMAS.keys())
         idx = next((i for i, k in enumerate(opcoes_lista) if k == idioma_atual), 0)
 
+        st.markdown('<div style="margin-top:-20px">', unsafe_allow_html=True)
         col_f, col_s = st.columns([1, 5])
         with col_f:
             st.markdown(
-                f'<img src="https://flagcdn.com/20x15/{sigla_atual}.png" '
-                f'style="width:20px;height:15px;margin-top:4px;border-radius:2px">',
+                f'<img src="https://flagcdn.com/16x12/{sigla_atual}.png" '
+                f'style="width:16px;height:12px;margin-top:6px;border-radius:1px">',
                 unsafe_allow_html=True
             )
         with col_s:
@@ -60,6 +61,7 @@ if user:
             from modules.database import save_preferences
             save_preferences(idioma=escolha)
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown(f"""
             <div style="text-align:center;padding:0.5rem 0">
