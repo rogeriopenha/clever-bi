@@ -13,13 +13,51 @@ def gerenciar_fontes():
 
     with tab_nova:
         with st.form("nova_fonte"):
-            nome = st.text_input("Nome da fonte", placeholder="Ex: Planilha de Vendas")
-            tipo = st.selectbox("Tipo", ["supabase", "google_sheets", "csv", "api"])
+            nome = st.text_input("Nome da fonte", placeholder="Ex: Vendas Copastur")
+            tipo = st.selectbox("Tipo", ["api", "supabase", "google_sheets", "csv"])
             config = {}
 
-            if tipo == "google_sheets":
+            if tipo == "api":
+                st.markdown("**🔌 Conexão API**")
+                config["doc_url"] = st.text_input(
+                    "URL da Documentação (Swagger/OpenAPI)",
+                    placeholder="https://api.copastur.com.br/swagger.json",
+                    help="URL do arquivo de especificação OpenAPI/Swagger para descoberta automática"
+                )
+                config["url"] = st.text_input(
+                    "URL Base da API",
+                    placeholder="https://api.copastur.com.br"
+                )
+                config["method"] = st.selectbox("Método Principal", ["GET", "POST"])
+                config["auth_type"] = st.selectbox(
+                    "Tipo de Autenticação",
+                    ["Nenhuma", "Bearer Token", "Basic Auth", "API Key"]
+                )
+                if config["auth_type"] == "Bearer Token":
+                    config["token"] = st.text_input("Bearer Token", type="password",
+                        placeholder="eyJhbGciOi...")
+                elif config["auth_type"] == "Basic Auth":
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        config["auth_user"] = st.text_input("Usuário")
+                    with c2:
+                        config["auth_pass"] = st.text_input("Senha", type="password")
+                elif config["auth_type"] == "API Key":
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        config["key_name"] = st.text_input("Nome do Header", value="X-API-Key")
+                    with c2:
+                        config["key_value"] = st.text_input("Valor da API Key", type="password")
+                config["headers"] = st.text_area(
+                    "Headers Adicionais (JSON)",
+                    value="{}",
+                    help='Ex: {"Accept": "application/json"}'
+                )
+
+            elif tipo == "google_sheets":
                 config["url"] = st.text_input("URL da planilha", placeholder="https://docs.google.com/spreadsheets/d/...")
                 config["aba"] = st.text_input("Aba (opcional)", placeholder="Sheet1")
+
             elif tipo == "csv":
                 arquivo = st.file_uploader("Upload do arquivo", type=["csv", "xlsx"])
                 if arquivo:
@@ -29,12 +67,11 @@ def gerenciar_fontes():
                         st.dataframe(df.head(), use_container_width=True)
                         config["colunas"] = list(df.columns)
                         st.session_state["csv_temp_" + nome] = df.to_json()
-            elif tipo == "api":
-                config["url"] = st.text_input("URL da API")
-                config["method"] = st.selectbox("Método", ["GET", "POST"])
-                config["headers"] = st.text_area("Headers (JSON)", value="{}")
+
             elif tipo == "supabase":
-                config["tabela"] = st.text_input("Nome da tabela no Supabase")
+                st.markdown("**🗄️ Conexão Supabase**")
+                config["tabela"] = st.text_input("Nome da tabela no Supabase",
+                    placeholder="Ex: pedidos, clientes, produtos")
 
             if st.form_submit_button("Salvar Fonte", type="primary", use_container_width=True):
                 result = insert_record("fontes_dados", {
