@@ -1,6 +1,7 @@
 import streamlit as st
+import json
 
-TEMAS = {
+TEMAS_PADRAO = {
     "clever_dark": {
         "nome": "CLEVER Dark",
         "icone": "🌙",
@@ -99,15 +100,22 @@ TEMAS = {
 }
 
 TEMA_PADRAO = "clever_dark"
+CHAVE_CUSTOM = "temas_customizados"
+
+def obter_todos_temas() -> dict:
+    temas = dict(TEMAS_PADRAO)
+    custom = st.session_state.get(CHAVE_CUSTOM, {})
+    temas.update(custom)
+    return temas
 
 def get_tema() -> str:
     tema = st.session_state.get("tema", TEMA_PADRAO)
-    if tema not in TEMAS:
+    if tema not in obter_todos_temas():
         tema = TEMA_PADRAO
     return tema
 
 def get_cores() -> dict:
-    return TEMAS[get_tema()]
+    return obter_todos_temas()[get_tema()]
 
 def css_tema() -> str:
     c = get_cores()
@@ -116,7 +124,9 @@ def css_tema() -> str:
         .stApp {{ background-color: {c["bg_primary"]}; }}
         .stSidebar {{ background-color: {c["bg_secondary"]}; }}
         h1, h2, h3, h4, h5, h6 {{ color: {c["text_primary"]} !important; }}
-        p, li, span, div, label {{ color: {c["text_primary"]}; }}
+        p, li, span, div, label, .st-emotion-cache-15tx938, .st-emotion-cache-1inwz65 {{
+            color: {c["text_primary"]};
+        }}
         .st-bw {{ background-color: {c["bg_secondary"]}; }}
         .stButton button {{
             background-color: {c["accent"]};
@@ -137,10 +147,28 @@ def css_tema() -> str:
             color: {c["text_primary"]};
             border: 1px solid {c["border"]};
         }}
-        .stSelectbox div[data-baseweb="select"] {{
-            background-color: {c["bg_secondary"]};
+        .stSelectbox div[data-baseweb="select"],
+        .stSelectbox div[data-baseweb="select"] > div {{
+            background-color: {c["bg_secondary"]} !important;
+            color: {c["text_primary"]} !important;
             border: 1px solid {c["border"]};
             border-radius: 8px;
+        }}
+        .stSelectbox div[data-baseweb="select"] span {{
+            color: {c["text_primary"]} !important;
+        }}
+        .stSelectbox li[role="option"] {{
+            background-color: {c["bg_secondary"]} !important;
+            color: {c["text_primary"]} !important;
+        }}
+        .stSelectbox li[role="option"]:hover {{
+            background-color: {c["accent"]} !important;
+            color: white !important;
+        }}
+        .stMultiSelect div[data-baseweb="select"],
+        .stMultiSelect div[data-baseweb="select"] span {{
+            background-color: {c["bg_secondary"]} !important;
+            color: {c["text_primary"]} !important;
         }}
         .st-emotion-cache-1wrc2r6 {{ color: {c["metric_label"]}; }}
         div[data-testid="stMetricLabel"] {{ color: {c["metric_label"]}; }}
@@ -158,16 +186,41 @@ def css_tema() -> str:
             color: white !important;
         }}
         div.stDataFrame {{ border: 1px solid {c["border"]}; border-radius: 8px; }}
-        section[data-testid="stSidebar"] .st-emotion-cache-1wmy9hl {{ color: {c["text_secondary"]}; }}
+        section[data-testid="stSidebar"] .st-emotion-cache-1wmy9hl,
+        section[data-testid="stSidebar"] p,
+        section[data-testid="stSidebar"] span,
+        section[data-testid="stSidebar"] div {{
+            color: {c["text_primary"]};
+        }}
         hr {{ border-color: {c["border"]}; }}
         .st-emotion-cache-1mi2ry5 {{ background-color: {c["bg_secondary"]}; }}
+        .stAlert {{ background-color: {c["bg_secondary"]}; border: 1px solid {c["border"]}; }}
+        .st-bp {{ background-color: {c["bg_primary"]}; }}
+        div[data-testid="stExpander"] div[data-testid="stExpanderToggleIcon"] svg {{
+            fill: {c["text_primary"]};
+        }}
+        .stNumberInput input, .stDateInput input, .stTimeInput input {{
+            background-color: {c["bg_secondary"]};
+            color: {c["text_primary"]};
+            border: 1px solid {c["border"]};
+        }}
+        .stRadio label, .stCheckbox label {{
+            color: {c["text_primary"]} !important;
+        }}
+        div[role="radiogroup"] label span:first-child {{
+            background-color: {c["bg_secondary"]};
+            border-color: {c["border"]};
+        }}
+        .st-bv, .st-bu {{ border-color: {c["border"]}; }}
     </style>
     """
 
 def seletor_tema():
     st.markdown("### 🎨 Tema")
+    temas = obter_todos_temas()
     tema_atual = get_tema()
-    opcoes = {k: f"{v['icone']} {v['nome']}" for k, v in TEMAS.items()}
+    opcoes = {k: f"{v['icone']} {v['nome']}" for k, v in temas.items()}
+
     escolha = st.selectbox(
         "Selecione o tema",
         options=list(opcoes.keys()),
@@ -178,3 +231,95 @@ def seletor_tema():
     if escolha and escolha != tema_atual:
         st.session_state.tema = escolha
         st.rerun()
+
+    # Preview do tema atual
+    tema_obj = temas.get(tema_atual)
+    if tema_obj:
+        cores = {k: v for k, v in tema_obj.items() if k not in ("nome", "icone")}
+        st.markdown("**Cores do tema atual:**")
+        cols = st.columns(4)
+        for i, (chave, valor) in enumerate(sorted(cores.items())):
+            with cols[i % 4]:
+                st.markdown(
+                    f'<div style="display:flex;align-items:center;gap:6px;margin:2px 0">'
+                    f'<div style="width:16px;height:16px;border-radius:3px;background:{valor};border:1px solid #555"></div>'
+                    f'<span style="font-size:0.75rem">{chave}</span>'
+                    f'</div>',
+                    unsafe_allow_html=True
+                )
+
+    with st.expander("✏️ Criar / Editar tema personalizado"):
+        editor_tema_custom()
+
+def editor_tema_custom():
+    st.caption("Personalize todas as cores e salve como um novo tema.")
+
+    # Carregar tema existente para editar, ou usar o atual como base
+    editando = st.session_state.get("editando_tema_key", "")
+    temas = obter_todos_temas()
+    tema_base = temas.get(editando, get_cores())
+
+    with st.form("custom_theme_form"):
+        nome = st.text_input("Nome do tema", value=tema_base.get("nome", ""),
+                             placeholder="Ex: Minha Empresa")
+
+        col1, col2 = st.columns(2)
+        cores_editadas = {}
+        tokens_mostrar = [
+            ("bg_primary", "Fundo principal"),
+            ("bg_secondary", "Fundo cards/sidebar"),
+            ("text_primary", "Texto principal"),
+            ("text_secondary", "Texto secundário"),
+            ("accent", "Cor de destaque"),
+            ("accent_hover", "Destaque hover"),
+            ("border", "Bordas"),
+            ("metric_label", "Label de métrica"),
+            ("metric_value", "Valor de métrica"),
+            ("metric_delta", "Delta de métrica"),
+            ("card_bg", "Fundo do card"),
+            ("card_border", "Borda do card"),
+            ("tab_inactive_bg", "Aba inativa fundo"),
+            ("tab_inactive_color", "Aba inativa texto"),
+            ("tab_active_bg", "Aba ativa fundo"),
+        ]
+
+        for i, (token, rotulo) in enumerate(tokens_mostrar):
+            with (col1 if i < 8 else col2):
+                cores_editadas[token] = st.color_picker(
+                    rotulo,
+                    value=tema_base.get(token, "#000000"),
+                    key=f"cp_{token}"
+                )
+
+        salvar = st.form_submit_button("💾 Salvar tema personalizado", type="primary", use_container_width=True)
+
+        if salvar and nome.strip():
+            chave = editando if editando else f"custom_{len([k for k in temas if k.startswith('custom_')])}"
+            if not editando:
+                chave = f"custom_{len([k for k in temas if k.startswith('custom_')]) + 1}"
+
+            novo_tema = {"nome": nome.strip(), "icone": "🎨"}
+            novo_tema.update(cores_editadas)
+
+            custom = dict(st.session_state.get(CHAVE_CUSTOM, {}))
+            custom[chave] = novo_tema
+            st.session_state[CHAVE_CUSTOM] = custom
+            st.session_state.tema = chave
+            st.session_state.pop("editando_tema_key", None)
+            st.success(f"Tema '{nome}' salvo!")
+            st.rerun()
+
+    # Gerenciar temas customizados
+    custom = st.session_state.get(CHAVE_CUSTOM, {})
+    if custom:
+        st.markdown("---")
+        st.markdown("**Excluir temas personalizados**")
+        for chave in list(custom.keys()):
+            col_a, col_b = st.columns([3, 1])
+            with col_a:
+                st.markdown(f"🎨 {custom[chave]['nome']}")
+            with col_b:
+                if st.button("🗑️", key=f"del_theme_{chave}"):
+                    custom.pop(chave, None)
+                    st.session_state[CHAVE_CUSTOM] = custom
+                    st.rerun()
