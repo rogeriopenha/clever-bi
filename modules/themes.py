@@ -246,6 +246,25 @@ def seletor_tema():
         _salvar_pref(escolha, None)
         st.rerun()
 
+    # Preview do tema atual
+    tema_obj = temas.get(tema_atual)
+    if tema_obj:
+        cores = {k: v for k, v in tema_obj.items() if k not in ("nome", "icone")}
+        st.markdown(f"**{t('tema.cores_atuais')}:**")
+        cols = st.columns(4)
+        for i, (chave, valor) in enumerate(sorted(cores.items())):
+            with cols[i % 4]:
+                st.markdown(
+                    f'<div style="display:flex;align-items:center;gap:6px;margin:2px 0">'
+                    f'<div style="width:16px;height:16px;border-radius:3px;background:{valor};border:1px solid #555"></div>'
+                    f'<span style="font-size:0.75rem">{token_label(chave)}</span>'
+                    f'</div>',
+                    unsafe_allow_html=True
+                )
+
+    with st.expander(t("tema.criar_editar")):
+        editor_tema_custom()
+
 def _salvar_pref(tema=None, idioma=None):
     from modules.database import save_preferences
     save_preferences(tema=tema, idioma=idioma)
