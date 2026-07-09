@@ -39,19 +39,17 @@ if user:
             </div>
         """, unsafe_allow_html=True)
 
-        # Seletor de idioma compacto: bandeira atual + dropdown
+        # Seletor de idioma: miniatura da bandeira + dropdown com as 10 opções
         idioma_atual = st.session_state.get("idioma", "pt-br")
         info_atual = IDIOMAS.get(idioma_atual, IDIOMAS["pt-br"])
-        idiomas_lista = list(IDIOMAS.items())
         opcoes = {k: f"{v['bandeira']}  {v['nome_nativo']}" for k, v in IDIOMAS.items()}
-        idx = next((i for i, (k, _) in enumerate(idiomas_lista) if k == idioma_atual), 0)
+        idx = next((i for i, k in enumerate(opcoes) if k == idioma_atual), 0)
         escolha = st.selectbox(
-            "Idioma",
+            label=f"{info_atual['bandeira']}",
             options=list(opcoes.keys()),
             format_func=lambda k: opcoes[k],
             index=idx,
-            key="lang_sidebar",
-            label_visibility="collapsed"
+            key="lang_sidebar"
         )
         if escolha and escolha != idioma_atual:
             st.session_state.idioma = escolha
