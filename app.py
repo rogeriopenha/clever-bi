@@ -39,18 +39,29 @@ if user:
             </div>
         """, unsafe_allow_html=True)
 
-        # Seletor de idioma: miniatura da bandeira + dropdown com as 10 opções
+        # Seletor de idioma: bandeira (imagem CDN) + dropdown com nome nativo
         idioma_atual = st.session_state.get("idioma", "pt-br")
         info_atual = IDIOMAS.get(idioma_atual, IDIOMAS["pt-br"])
-        opcoes = {k: f"{v['bandeira']}  {v['nome_nativo']}" for k, v in IDIOMAS.items()}
-        idx = next((i for i, k in enumerate(opcoes) if k == idioma_atual), 0)
-        escolha = st.selectbox(
-            label=f"{info_atual['bandeira']}",
-            options=list(opcoes.keys()),
-            format_func=lambda k: opcoes[k],
-            index=idx,
-            key="lang_sidebar"
-        )
+        sigla_atual = info_atual["sigla"]
+        opcoes_lista = list(IDIOMAS.keys())
+        idx = next((i for i, k in enumerate(opcoes_lista) if k == idioma_atual), 0)
+
+        col_f, col_s = st.columns([1, 5])
+        with col_f:
+            st.markdown(
+                f'<img src="https://flagcdn.com/24x18/{sigla_atual}.png" '
+                f'style="width:24px;height:18px;margin-top:8px;border-radius:2px">',
+                unsafe_allow_html=True
+            )
+        with col_s:
+            escolha = st.selectbox(
+                "Idioma",
+                options=opcoes_lista,
+                format_func=lambda k: IDIOMAS[k]["nome_nativo"],
+                index=idx,
+                key="lang_sidebar",
+                label_visibility="collapsed"
+            )
         if escolha and escolha != idioma_atual:
             st.session_state.idioma = escolha
             from modules.database import save_preferences

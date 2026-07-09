@@ -1,16 +1,16 @@
 import streamlit as st
 
 IDIOMAS = {
-    "pt-br": {"bandeira": "🇧🇷", "nome": "Português (BR)", "nome_nativo": "Português (Brasil)"},
-    "pt-pt": {"bandeira": "🇵🇹", "nome": "Português (PT)", "nome_nativo": "Português (Portugal)"},
-    "es":    {"bandeira": "🇪🇸", "nome": "Español", "nome_nativo": "Español"},
-    "en-us": {"bandeira": "🇺🇸", "nome": "English (US)", "nome_nativo": "English (US)"},
-    "en-gb": {"bandeira": "🇬🇧", "nome": "English (UK)", "nome_nativo": "English (UK)"},
-    "de":    {"bandeira": "🇩🇪", "nome": "Deutsch", "nome_nativo": "Deutsch"},
-    "fr":    {"bandeira": "🇫🇷", "nome": "Français", "nome_nativo": "Français"},
-    "ru":    {"bandeira": "🇷🇺", "nome": "Русский", "nome_nativo": "Русский"},
-    "zh":    {"bandeira": "🇨🇳", "nome": "中文", "nome_nativo": "中文"},
-    "ja":    {"bandeira": "🇯🇵", "nome": "日本語", "nome_nativo": "日本語"},
+    "pt-br": {"bandeira": "🇧🇷", "sigla": "br", "nome": "Português (BR)", "nome_nativo": "Português (Brasil)"},
+    "pt-pt": {"bandeira": "🇵🇹", "sigla": "pt", "nome": "Português (PT)", "nome_nativo": "Português (Portugal)"},
+    "es":    {"bandeira": "🇪🇸", "sigla": "es", "nome": "Español", "nome_nativo": "Español"},
+    "en-us": {"bandeira": "🇺🇸", "sigla": "us", "nome": "English (US)", "nome_nativo": "English (US)"},
+    "en-gb": {"bandeira": "🇬🇧", "sigla": "gb", "nome": "English (UK)", "nome_nativo": "English (UK)"},
+    "de":    {"bandeira": "🇩🇪", "sigla": "de", "nome": "Deutsch", "nome_nativo": "Deutsch"},
+    "fr":    {"bandeira": "🇫🇷", "sigla": "fr", "nome": "Français", "nome_nativo": "Français"},
+    "ru":    {"bandeira": "🇷🇺", "sigla": "ru", "nome": "Русский", "nome_nativo": "Русский"},
+    "zh":    {"bandeira": "🇨🇳", "sigla": "cn", "nome": "中文", "nome_nativo": "中文"},
+    "ja":    {"bandeira": "🇯🇵", "sigla": "jp", "nome": "日本語", "nome_nativo": "日本語"},
 }
 
 IDIOMA_PADRAO = "pt-br"
