@@ -81,6 +81,43 @@ def render_dashboard(dashboard_id: str):
         <p style="color:#6b7fa3;margin-bottom:1.5rem">{dash.get('descricao', '')}</p>
     """, unsafe_allow_html=True)
 
+    # Filtro de período
+    with st.expander("📅 Filtro de Período", expanded=False):
+        col_p1, col_p2, col_p3 = st.columns([2, 2, 1])
+        with col_p1:
+            data_ini = st.date_input("Data início", value=None, key=f"di_{dashboard_id}")
+        with col_p2:
+            data_fim = st.date_input("Data fim", value=None, key=f"df_{dashboard_id}")
+        with col_p3:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Aplicar", key=f"filtro_{dashboard_id}"):
+                st.session_state[f"periodo_{dashboard_id}"] = {
+                    "inicio": str(data_ini) if data_ini else None,
+                    "fim": str(data_fim) if data_fim else None
+                }
+                st.rerun()
+
+    # Exportação
+    with st.expander("📤 Exportar Dados", expanded=False):
+        widgets = listar_widgets(dashboard_id)
+        if not widgets.empty:
+            col_e1, col_e2, col_e3 = st.columns(3)
+            with col_e1:
+                if st.button("📥 CSV", key=f"exp_csv_{dashboard_id}", use_container_width=True):
+                    _exportar_dashboard(widgets, "csv")
+            with col_e2:
+                if st.button("📥 JSON", key=f"exp_json_{dashboard_id}", use_container_width=True):
+                    _exportar_dashboard(widgets, "json")
+            with col_e3:
+                if st.button("📥 Excel", key=f"exp_xlsx_{dashboard_id}", use_container_width=True):
+                    _exportar_dashboard(widgets, "excel")
+            st.markdown("---")
+            if st.button("📤 Exportar para Google Sheets", key=f"exp_gs_{dashboard_id}",
+                         use_container_width=True, type="secondary"):
+                _exportar_google_sheets(widgets, dash)
+        else:
+            st.info("Adicione widgets ao dashboard para exportar.")
+
     widgets = listar_widgets(dashboard_id)
 
     if widgets.empty:
@@ -317,3 +354,91 @@ def tela_dashboards():
                         st.session_state.dashboard_ativo = dash["id"]
                         st.session_state.pagina = "dashboard_edit"
                         st.rerun()
+
+def _exportar_dashboard(widgets: pd.DataFrame, formato: str):
+    try:
+        import io, csv
+        dados_totais = []
+        for _, w in widgets.iterrows():
+            df = _carregar_dados_widget(w)
+            if not df.empty:
+                dados_totais.append(df)
+
+        if not dados_totais:
+            st.warning("Nenhum dado para exportar")
+            return
+
+        df_final = pd.concat(dados_totais, ignore_index=True)
+
+        if formato == "csv":
+            csv_data = df_final.to_csv(index=False).encode("utf-8-sig")
+            st.download_button(
+                label="📥 Baixar CSV",
+                data=csv_data,
+                file_name=f"clever_bi_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv; charset=utf-8-sig",
+                key=f"dl_csv_{datetime.now().timestamp()}"
+            )
+        elif formato == "json":
+            json_data = df_final.to_json(orient="records", force_ascii=False).encode("utf-8")
+            st.download_button(
+                label="📥 Baixar JSON",
+                data=json_data,
+                file_name=f"clever_bi_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                mime="application/json",
+                key=f"dl_json_{datetime.now().timestamp()}"
+            )
+        elif formato == "excel":
+            buffer = io.BytesIO()
+            with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+                df_final.to_excel(writer, index=False, sheet_name="Dados")
+            st.download_button(
+                label="📥 Baixar Excel",
+                data=buffer.getvalue(),
+                file_name=f"clever_bi_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key=f"dl_xlsx_{datetime.now().timestamp()}"
+            )
+    except Exception as e:
+        st.error(f"Erro ao exportar: {e}")
+
+def _exportar_google_sheets(widgets: pd.DataFrame, dash: dict):
+    try:
+        import gspread
+        from oauth2client.service_account import ServiceAccountCredentials
+        from modules.database import current_user, get_tenant_id
+
+        user = current_user()
+        tenant_id = get_tenant_id()
+
+        dados_totais = []
+        for _, w in widgets.iterrows():
+            df = _carregar_dados_widget(w)
+            if not df.empty:
+                dados_totais.append(df)
+
+        if not dados_totais:
+            st.warning("Nenhum dado para exportar")
+            return
+
+        df_final = pd.concat(dados_totais, ignore_index=True)
+        sa_json = st.secrets.get("gcp_service_account_json")
+
+        if not sa_json:
+            st.warning("Google Sheets não configurado. Configure a chave de serviço GCP.")
+            return
+
+        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(json.loads(sa_json), scope)
+        client = gspread.authorize(creds)
+
+        sheet_title = f"CLEVER-BI Export {dash['nome']} {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+        sh = client.create(sheet_title)
+        ws = sh.get_worksheet(0)
+        ws.update_title("Dados")
+        ws.update([df_final.columns.values.tolist()] + df_final.values.tolist())
+        sh.share(user.get("email", ""), perm_type="user", role="writer")
+
+        st.success(f"✅ Exportado para Google Sheets: [Abrir Planilha]({sh.url})")
+    except Exception as e:
+        st.error(f"Erro ao exportar para Google Sheets: {e}")

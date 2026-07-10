@@ -15,7 +15,7 @@ def gerenciar_fontes():
         with st.form("nova_fonte"):
             nome = st.text_input("Nome da fonte", placeholder="Ex: Vendas Copastur")
             tipo = st.selectbox("Tipo", [
-                "api", "mysql", "sql_server", "postgresql", "mongodb",
+                "api", "copastur", "proceda", "mysql", "sql_server", "postgresql", "mongodb",
                 "supabase", "google_sheets", "excel", "csv"
             ])
             config = {}
@@ -55,6 +55,142 @@ def gerenciar_fontes():
                     "Headers Adicionais (JSON)",
                     value="{}",
                     help='Ex: {"Accept": "application/json"}'
+                )
+
+            elif tipo == "copastur":
+                st.markdown("**🏢 Copastur — API Sankhya**")
+                st.caption("Integração com o sistema Sankhya da Copastur")
+                config["tipo_conexao"] = st.selectbox(
+                    "Tipo de Conexão",
+                    ["API Sankhya", "Google Sheets (fallback)"]
+                )
+
+                if config["tipo_conexao"] == "API Sankhya":
+                    config["sankhya_url"] = st.text_input(
+                        "URL do Servidor Sankhya",
+                        placeholder="https://api.sankhya.com.br/service",
+                        value=config.get("sankhya_url", "https://api.sankhya.com.br/service")
+                    )
+                    config["sankhya_token"] = st.text_input(
+                        "Token de Integração",
+                        type="password",
+                        placeholder="Cole o token gerado no Sankhya",
+                        help="Token gerado no módulo de integrações do Sankhya"
+                    )
+                    config["sankhya_usuario"] = st.text_input("Usuário Sankhya", placeholder="api_user")
+                    config["sankhya_senha"] = st.text_input("Senha", type="password")
+                    config["entidade"] = st.selectbox(
+                        "Entidade / Dataset",
+                        ["Vendas", "Pedidos", "Clientes", "Produtos", "Financeiro",
+                         "Compras", "Estoque", "Faturamento", "CRM", "Custom (SQL)"]
+                    )
+                    if config["entidade"] == "Custom (SQL)":
+                        config["query_sankhya"] = st.text_area(
+                            "Query SQL (MSSQL)",
+                            placeholder="SELECT * FROM VENDAS WHERE DATA >= '2024-01-01'",
+                            help="Query no dialect MSSQL do Sankhya"
+                        )
+                    config["periodo_automatico"] = st.checkbox("Buscar período automático (últimos 30 dias)",
+                        value=config.get("periodo_automatico", True))
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        config["data_inicio"] = st.date_input("Data início (opcional)")
+                    with c2:
+                        config["data_fim"] = st.date_input("Data fim (opcional)")
+
+                else:
+                    config["sheets_url"] = st.text_input(
+                        "URL da Planilha Google Sheets",
+                        placeholder="https://docs.google.com/spreadsheets/d/..."
+                    )
+                    config["sheets_aba"] = st.text_input("Aba", value="Sheet1")
+                    config["sheets_intervalo"] = st.text_input(
+                        "Intervalo (opcional)",
+                        placeholder="A:Z",
+                        help="Ex: A:Z ou A1:Z1000"
+                    )
+
+            elif tipo == "proceda":
+                st.markdown("**📂 Proceda — Arquivos do Sistema**")
+                st.caption("Importação de arquivos do sistema Proceda")
+                config["tipo_arquivo"] = st.selectbox(
+                    "Tipo de Arquivo",
+                    ["Ocorrências (ocoren)", "Conhecimentos (conemb)", "Documentos Cobrança (doccob)"]
+                )
+
+                if config["tipo_arquivo"] == "Ocorrências (ocoren)":
+                    config["sub_tipo"] = "ocoren"
+                    st.markdown("**Ocorrências — Registro de eventos e ocorrências do sistema**")
+                    config["formato"] = st.selectbox(
+                        "Formato do arquivo",
+                        ["TXT (delimitado)", "CSV", "JSON"]
+                    )
+                    arquivo = st.file_uploader(
+                        "Upload do arquivo de ocorrências",
+                        type=["txt", "csv", "json"],
+                        key="ocoren"
+                    )
+                    if arquivo:
+                        config["nome_arquivo"] = arquivo.name
+                        try:
+                            df = load_csv(arquivo)
+                            if not df.empty:
+                                st.dataframe(df.head(), use_container_width=True)
+                                config["colunas"] = list(df.columns)
+                                st.session_state["proceda_ocoren_" + nome] = df.to_json()
+                        except:
+                            st.info("Prévia não disponível para este formato")
+
+                elif config["tipo_arquivo"] == "Conhecimentos (conemb)":
+                    config["sub_tipo"] = "conemb"
+                    st.markdown("**Conhecimentos de Embarque — Documentos de transporte e logística**")
+                    config["formato"] = st.selectbox(
+                        "Formato do arquivo",
+                        ["TXT (delimitado)", "CSV", "XML", "JSON"],
+                        key="fmt_conemb"
+                    )
+                    arquivo = st.file_uploader(
+                        "Upload do arquivo de conhecimentos",
+                        type=["txt", "csv", "xml", "json"],
+                        key="conemb"
+                    )
+                    if arquivo:
+                        config["nome_arquivo"] = arquivo.name
+                        try:
+                            df = load_csv(arquivo)
+                            if not df.empty:
+                                st.dataframe(df.head(), use_container_width=True)
+                                config["colunas"] = list(df.columns)
+                                st.session_state["proceda_conemb_" + nome] = df.to_json()
+                        except:
+                            st.info("Prévia não disponível para este formato")
+
+                elif config["tipo_arquivo"] == "Documentos Cobrança (doccob)":
+                    config["sub_tipo"] = "doccob"
+                    st.markdown("**Documentos de Cobrança — Boletos, faturas e títulos**")
+                    config["formato"] = st.selectbox(
+                        "Formato do arquivo",
+                        ["CSV", "TXT (delimitado)", "JSON", "XML"],
+                        key="fmt_doccob"
+                    )
+                    arquivo = st.file_uploader(
+                        "Upload do arquivo de cobrança",
+                        type=["csv", "txt", "json", "xml"],
+                        key="doccob"
+                    )
+                    if arquivo:
+                        config["nome_arquivo"] = arquivo.name
+                        try:
+                            df = load_csv(arquivo)
+                            if not df.empty:
+                                st.dataframe(df.head(), use_container_width=True)
+                                config["colunas"] = list(df.columns)
+                                st.session_state["proceda_doccob_" + nome] = df.to_json()
+                        except:
+                            st.info("Prévia não disponível para este formato")
+                config["periodo_padrao"] = st.text_input(
+                    "Período padrão (opcional)",
+                    placeholder="Ex: Mês atual, Últimos 30 dias"
                 )
 
             elif tipo == "mysql":
