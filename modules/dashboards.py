@@ -366,35 +366,47 @@ def editar_dashboard(dashboard_id: str):
                         st.rerun()
             st.markdown("---")
 
-        with st.form("novo_widget"):
-            widget_cfg = editor_widget()
-            c1, c2 = st.columns(2)
-            with c1:
-                pos_w = st.selectbox("Largura", [1, 2, 3, 4], index=1, help="1=25% 2=50% 3=75% 4=100%")
-            with c2:
-                pos_h = st.selectbox("Altura", [1, 2, 3], index=0)
-            widget_cfg["posicao"] = {"x": 0, "y": 0, "w": pos_w, "h": pos_h}
-            if st.form_submit_button("➕ Adicionar Widget", type="primary", use_container_width=True):
-                if widget_cfg["titulo"]:
-                    salvar_widget(dashboard_id, widget_cfg)
-                    st.success("Widget adicionado!")
-                    st.rerun()
+        # Seletor visual de gráfico (fora do form para permitir interatividade)
+        widget_cfg = editor_widget()
+
+        if widget_cfg and widget_cfg.get("tipo"):
+            st.markdown("---")
+            with st.form("novo_widget"):
+                c1, c2 = st.columns(2)
+                with c1:
+                    pos_w = st.selectbox("Largura", [1, 2, 3, 4], index=1, help="1=25% 2=50% 3=75% 4=100%")
+                with c2:
+                    pos_h = st.selectbox("Altura", [1, 2, 3], index=0)
+                widget_cfg["posicao"] = {"x": 0, "y": 0, "w": pos_w, "h": pos_h}
+                if st.form_submit_button("➕ Adicionar Widget", type="primary", use_container_width=True):
+                    if widget_cfg["titulo"]:
+                        salvar_widget(dashboard_id, widget_cfg)
+                        st.success("Widget adicionado!")
+                        st.rerun()
 
     st.markdown("---")
     st.markdown("### 🎯 Pré-visualização")
     render_dashboard(dashboard_id)
 
 def tela_dashboards():
-    st.markdown(f"""
-        <h1 style="color:#e8edf5">{t('dash.titulo')}</h1>
-        <p style="color:#6b7fa3">{t('dash.subtitulo')}</p>
-    """, unsafe_allow_html=True)
+    from modules.themes import get_cores
+    cores = get_cores()
 
     col1, col2 = st.columns([3, 1])
+    with col1:
+        st.markdown(f"""
+            <div class="page-title" style="font-size:1.5rem;font-weight:700;color:{cores['text_primary']}">
+                📊 {t('dash.titulo')}
+            </div>
+            <div style="color:{cores['text_secondary']};font-size:0.85rem;margin-top:0.15rem">
+                {t('dash.subtitulo')}
+            </div>
+        """, unsafe_allow_html=True)
     with col2:
         if st.button(t("dash.novo"), type="primary", use_container_width=True):
             st.session_state.novo_dashboard = True
 
+    col_ai = st.columns([1])[0]
     if st.button("🪄 Assistente Inteligente", use_container_width=True, type="secondary"):
         wizard_criacao()
         return
@@ -423,24 +435,35 @@ def tela_dashboards():
     cols = st.columns(3)
     for i, (_, dash) in enumerate(dashboards.iterrows()):
         with cols[i % 3]:
-            with st.container():
-                st.markdown(f"""
-                    <div style="background:#1a2340;padding:1rem;border-radius:12px;margin-bottom:0.5rem;border:1px solid #2a3450">
-                        <h3 style="color:#e8edf5;margin:0">{dash['nome']}</h3>
-                        <p style="color:#6b7fa3;font-size:0.8rem">{(dash.get('descricao') or 'Sem descrição')[:80]}</p>
+            st.markdown(f"""
+                <div class="dash-card" style="background:{cores['card_bg']};border:1px solid {cores['card_border']};border-radius:12px;padding:1.25rem;margin-bottom:0.75rem;transition:all 0.2s ease;cursor:pointer"
+                     onclick="document.querySelector('button[key=open_{dash['id']}]').click()">
+                    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
+                        <div style="background:{cores['accent']};width:8px;height:8px;border-radius:50%;flex-shrink:0"></div>
+                        <h3 style="color:{cores['text_primary']};margin:0;font-size:1rem;font-weight:600">{(dash.get('nome') or 'Sem nome')[:40]}</h3>
                     </div>
-                """, unsafe_allow_html=True)
-                c1, c2 = st.columns(2)
-                with c1:
-                    if st.button("👁️ Abrir", key=f"open_{dash['id']}", use_container_width=True):
-                        st.session_state.dashboard_ativo = dash["id"]
-                        st.session_state.pagina = "dashboard_view"
-                        st.rerun()
-                with c2:
-                    if st.button("✏️ Editar", key=f"edit_{dash['id']}", use_container_width=True):
-                        st.session_state.dashboard_ativo = dash["id"]
-                        st.session_state.pagina = "dashboard_edit"
-                        st.rerun()
+                    <p style="color:{cores['text_secondary']};font-size:0.8rem;margin:0 0 0.75rem 0;line-height:1.4">
+                        {(dash.get('descricao') or 'Sem descrição')[:80]}
+                    </p>
+                    <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid {cores['border']};padding-top:0.65rem;margin-top:0.25rem">
+                        <span style="color:{cores['text_secondary']};font-size:0.65rem">{dash.get('criado_em','').split('T')[0] if dash.get('criado_em') else ''}</span>
+                        <div style="display:flex;gap:0.4rem">
+                            <span style="background:{cores['accent']};color:white;padding:0.2rem 0.5rem;border-radius:4px;font-size:0.6rem;font-weight:600">VIEW</span>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            c1, c2 = st.columns(2)
+            with c1:
+                if st.button("👁️ Abrir", key=f"open_{dash['id']}", use_container_width=True):
+                    st.session_state.dashboard_ativo = dash["id"]
+                    st.session_state.pagina = "dashboard_view"
+                    st.rerun()
+            with c2:
+                if st.button("✏️ Editar", key=f"edit_{dash['id']}", use_container_width=True):
+                    st.session_state.dashboard_ativo = dash["id"]
+                    st.session_state.pagina = "dashboard_edit"
+                    st.rerun()
 
 def _exportar_dashboard(widgets: pd.DataFrame, formato: str):
     try:

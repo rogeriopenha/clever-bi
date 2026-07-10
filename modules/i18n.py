@@ -64,6 +64,20 @@ T = {
         "fr": "⚙️ Paramètres", "ru": "⚙️ Настройки",
         "zh": "⚙️ 设置", "ja": "⚙️ 設定",
     },
+    "nav.etl": {
+        "pt-br": "🔄 ETL", "pt-pt": "🔄 ETL",
+        "es": "🔄 ETL", "en-us": "🔄 ETL",
+        "en-gb": "🔄 ETL", "de": "🔄 ETL",
+        "fr": "🔄 ETL", "ru": "🔄 ETL",
+        "zh": "🔄 ETL", "ja": "🔄 ETL",
+    },
+    "nav.automacao": {
+        "pt-br": "🤖 Automação", "pt-pt": "🤖 Automação",
+        "es": "🤖 Automatización", "en-us": "🤖 Automation",
+        "en-gb": "🤖 Automation", "de": "🤖 Automatisierung",
+        "fr": "🤖 Automatisation", "ru": "🤖 Автоматизация",
+        "zh": "🤖 自动化", "ja": "🤖 自動化",
+    },
     "nav.sair": {
         "pt-br": "🚪 Sair", "pt-pt": "🚪 Sair",
         "es": "🚪 Salir", "en-us": "🚪 Logout",
