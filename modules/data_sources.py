@@ -12,12 +12,16 @@ def gerenciar_fontes():
     tab_nova, tab_lista, tab_api = st.tabs(["Nova Fonte", "Fontes Existentes", "🔍 API Discovery"])
 
     with tab_nova:
-        with st.form("nova_fonte"):
+        tipo = st.selectbox("Tipo", [
+            "", "api", "copastur", "proceda", "mysql", "sql_server", "postgresql", "mongodb",
+            "supabase", "google_sheets", "excel", "csv"
+        ])
+
+        if not tipo:
+            st.info("👆 Selecione um tipo de fonte acima para configurar")
+        else:
+            with st.form("nova_fonte"):
             nome = st.text_input("Nome da fonte", placeholder="Ex: Vendas Copastur")
-            tipo = st.selectbox("Tipo", [
-                "api", "copastur", "proceda", "mysql", "sql_server", "postgresql", "mongodb",
-                "supabase", "google_sheets", "excel", "csv"
-            ])
             config = {}
 
             if tipo == "api":
