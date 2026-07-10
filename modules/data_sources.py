@@ -19,9 +19,9 @@ def gerenciar_fontes():
 
         if not tipo:
             st.info("👆 Selecione um tipo de fonte acima para configurar")
-        else:
-            with st.form("nova_fonte"):
-            nome = st.text_input("Nome da fonte", placeholder="Ex: Vendas Copastur")
+
+        with st.form("nova_fonte"):
+            nome = st.text_input("Nome da fonte", placeholder="Ex: Vendas Copastur") if tipo else ""
             config = {}
 
             if tipo == "api":
@@ -270,14 +270,17 @@ def gerenciar_fontes():
                 config["tabela"] = st.text_input("Nome da tabela no Supabase",
                     placeholder="Ex: pedidos, clientes, produtos")
 
-            if st.form_submit_button("Salvar Fonte", type="primary", use_container_width=True):
-                result = insert_record("fontes_dados", {
-                    "tenant_id": tenant_id,
-                    "nome": nome,
-                    "tipo": tipo,
-                    "config": json.dumps(config),
-                    "criado_por": current_user().get("id")
-                })
+            if st.form_submit_button("Salvar Fonte", type="primary", use_container_width=True, disabled=not tipo):
+                if not nome:
+                    st.warning("Preencha o nome da fonte")
+                else:
+                    result = insert_record("fontes_dados", {
+                        "tenant_id": tenant_id,
+                        "nome": nome,
+                        "tipo": tipo,
+                        "config": json.dumps(config),
+                        "criado_por": current_user().get("id")
+                    })
                 if "error" not in result:
                     st.success(f"Fonte '{nome}' criada!")
                     st.rerun()
