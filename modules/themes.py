@@ -126,6 +126,7 @@ def get_cores() -> dict:
 def css_tema() -> str:
     c = get_cores()
     return f"""
+    <meta name="google" content="notranslate">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
