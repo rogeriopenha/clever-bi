@@ -6,6 +6,7 @@ from modules.database import insert_record, update_record, delete_record, query_
 from modules.widgets import render_widget, editor_widget
 from modules.data_sources import preview_fonte, listar_datasets, criar_dataset
 from modules.i18n import t
+from modules.intelligence import sugerir_grafico, gerar_insights, profiler_qualidade, gerar_previsao, simulador_cenario, wizard_criacao
 
 def listar_dashboards():
     tenant_id = get_tenant_id()
@@ -119,6 +120,88 @@ def render_dashboard(dashboard_id: str):
             st.info("Adicione widgets ao dashboard para exportar.")
 
     widgets = listar_widgets(dashboard_id)
+
+    # Smart Insights
+    if not widgets.empty:
+        with st.expander("💡 Insights Inteligentes", expanded=False):
+            dados_insight = _carregar_dados_widget(widgets.iloc[0])
+            if not dados_insight.empty:
+                insights = gerar_insights(dados_insight)
+                for ins in insights:
+                    st.markdown(f"- {ins}")
+                if st.button("🔄 Atualizar", key=f"reinsight_{dashboard_id}"):
+                    st.rerun()
+
+    # Auto-chart suggestion
+    if not widgets.empty:
+        dados_w = _carregar_dados_widget(widgets.iloc[0])
+        if not dados_w.empty and st.button("🤖 Sugerir Gráficos", key=f"autochart_{dashboard_id}"):
+            st.session_state[f"sugestoes_{dashboard_id}"] = sugerir_grafico(dados_w)
+
+        if f"sugestoes_{dashboard_id}" in st.session_state:
+            sugs = st.session_state[f"sugestoes_{dashboard_id}"]
+            st.markdown("**🤖 Sugestões automáticas:**")
+            cols_sug = st.columns(len(sugs))
+            for si, sug in enumerate(sugs):
+                with cols_sug[si]:
+                    st.markdown(f"**{sug['titulo']}**")
+                    st.caption(f"Tipo: {sug['tipo']}")
+                    if st.button("➕", key=f"add_sug_{dashboard_id}_{si}"):
+                        salvar_widget(dashboard_id, sug)
+                        st.rerun()
+
+    # Data Profiler
+    if not widgets.empty:
+        with st.expander("📋 Perfil dos Dados", expanded=False):
+            dados_perfil = _carregar_dados_widget(widgets.iloc[0])
+            if not dados_perfil.empty:
+                profile = profiler_qualidade(dados_perfil)
+                st.markdown(f"**{profile['registros']:,}** registros · **{profile['colunas']}** colunas · "
+                           f"**{profile['duplicatas']:,}** duplicatas · **{profile['memoria_kb']:.0f}** KB")
+                df_prof = pd.DataFrame(profile["colunas_info"])
+                st.dataframe(df_prof, use_container_width=True, height=min(300, 35 * len(df_prof)))
+
+    # What-If Simulator
+    if not widgets.empty:
+        with st.expander("🔮 Simulador What-If", expanded=False):
+            dados_sim = _carregar_dados_widget(widgets.iloc[0])
+            if not dados_sim.empty:
+                num_sim = [c for c in dados_sim.columns if pd.api.types.is_numeric_dtype(dados_sim[c])]
+                cat_sim = [c for c in dados_sim.columns if pd.api.types.is_object_dtype(dados_sim[c])]
+                if num_sim:
+                    col_sim = st.selectbox("Coluna de valor", num_sim, key=f"whatif_col_{dashboard_id}")
+                    grupos = st.multiselect("Agrupar por (opcional)", cat_sim, key=f"whatif_grp_{dashboard_id}")
+                    if st.button("Simular", key=f"whatif_go_{dashboard_id}"):
+                        cenario = simulador_cenario(dados_sim, col_sim, grupos)
+                        if "erro" not in cenario:
+                            st.metric("Valor Total Base", f"${cenario['total_base']:,.2f}")
+                            for c in cenario.get("cenarios", []):
+                                st.markdown(f"**Por {c['dimensao']}:**")
+                                df_c = pd.DataFrame(c["dados"])
+                                st.dataframe(df_c, use_container_width=True)
+
+    # Forecast
+    if not widgets.empty:
+        with st.expander("📈 Previsão (Forecast)", expanded=False):
+            dados_fc = _carregar_dados_widget(widgets.iloc[0])
+            if not dados_fc.empty:
+                date_fc = [c for c in dados_fc.columns if pd.api.types.is_datetime64_any_dtype(dados_fc[c])]
+                num_fc = [c for c in dados_fc.columns if pd.api.types.is_numeric_dtype(dados_fc[c])]
+                if date_fc and num_fc:
+                    col_data = st.selectbox("Coluna de data", date_fc, key=f"fc_date_{dashboard_id}")
+                    col_val = st.selectbox("Coluna de valor", num_fc, key=f"fc_val_{dashboard_id}")
+                    periodos = st.slider("Períodos à frente", 3, 36, 12, key=f"fc_per_{dashboard_id}")
+                    if st.button("Gerar Previsão", key=f"fc_go_{dashboard_id}"):
+                        prev = gerar_previsao(dados_fc, col_data, col_val, periodos)
+                        if not prev.empty:
+                            import plotly.express as px
+                            fig = px.line(prev, x=col_data, y=col_val, color="tipo",
+                                         title=f"Previsão: {col_val}",
+                                         color_discrete_map={"histórico": "#4a7cf7", "previsão": "#ff6b6b"})
+                            fig.update_layout(paper_bgcolor="rgba(0,0,0,0)",
+                                            plot_bgcolor="rgba(0,0,0,0)",
+                                            font=dict(color="#e8edf5"))
+                            st.plotly_chart(fig, use_container_width=True)
 
     if widgets.empty:
         st.info("Este dashboard está vazio. Adicione widgets no modo edição.")
@@ -311,6 +394,10 @@ def tela_dashboards():
     with col2:
         if st.button(t("dash.novo"), type="primary", use_container_width=True):
             st.session_state.novo_dashboard = True
+
+    if st.button("🪄 Assistente Inteligente", use_container_width=True, type="secondary"):
+        wizard_criacao()
+        return
 
     if st.session_state.get("novo_dashboard"):
         with st.form("novo_dash_form"):
