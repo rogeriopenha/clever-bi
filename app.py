@@ -71,7 +71,7 @@ if user:
         # Logo + título
         with open(os.path.join(_ROOT, "Logo-CleverBI.svg"), "rb") as _f:
             _b64 = base64.b64encode(_f.read()).decode("utf-8")
-        _logo_img = f'<img src="data:image/svg+xml;base64,{_b64}" style="height:36px;width:auto">'
+        _logo_img = f'<img src="data:image/svg+xml;base64,{_b64}">'
         st.markdown(f"""
             <div class="sidebar-header">
                 <div class="sidebar-logo">{_logo_img}</div>
