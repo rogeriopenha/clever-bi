@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 import json
+import requests
+from urllib.parse import urljoin
+import base64
 from modules.database import insert_record, query_native, get_tenant_id, current_user, load_csv
 
 from modules.i18n import t
@@ -20,6 +23,31 @@ def gerenciar_fontes():
         if not tipo:
             st.info("👆 Selecione um tipo de fonte acima para configurar")
 
+        # Auth fields outside form for reactivity
+        if tipo == "api":
+            st.markdown("**🔐 Autenticação**")
+            st.selectbox("Tipo de Autenticação",
+                ["Nenhuma", "Bearer Token", "Basic Auth", "API Key"],
+                key="auth_type_outside")
+            auth_type = st.session_state.get("auth_type_outside", "Nenhuma")
+            if auth_type == "Bearer Token":
+                st.text_input("Bearer Token", type="password",
+                    placeholder="eyJhbGciOi...", key="api_bearer_token")
+            elif auth_type == "Basic Auth":
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.text_input("Usuário", key="api_basic_user")
+                with c2:
+                    st.text_input("Senha", type="password", key="api_basic_pass")
+            elif auth_type == "API Key":
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.text_input("Nome do Header", value="X-API-Key", key="api_key_name")
+                with c2:
+                    st.text_input("Valor da API Key", type="password", key="api_key_value")
+            st.text_area("Headers Adicionais (JSON)", value="{}",
+                help='Ex: {"Accept": "application/json"}', key="api_headers")
+
         with st.form("nova_fonte"):
             nome = st.text_input("Nome da fonte", placeholder="Ex: Vendas Copastur") if tipo else ""
             config = {}
@@ -36,29 +64,21 @@ def gerenciar_fontes():
                     placeholder="https://api.copastur.com.br"
                 )
                 config["method"] = st.selectbox("Método Principal", ["GET", "POST"])
-                config["auth_type"] = st.selectbox(
-                    "Tipo de Autenticação",
-                    ["Nenhuma", "Bearer Token", "Basic Auth", "API Key"]
-                )
+                config["auth_type"] = st.session_state.get("auth_type_outside", "Nenhuma")
                 if config["auth_type"] == "Bearer Token":
-                    config["token"] = st.text_input("Bearer Token", type="password",
-                        placeholder="eyJhbGciOi...")
+                    config["token"] = st.session_state.get("api_bearer_token", "")
                 elif config["auth_type"] == "Basic Auth":
-                    c1, c2 = st.columns(2)
-                    with c1:
-                        config["auth_user"] = st.text_input("Usuário")
-                    with c2:
-                        config["auth_pass"] = st.text_input("Senha", type="password")
+                    config["auth_user"] = st.session_state.get("api_basic_user", "")
+                    config["auth_pass"] = st.session_state.get("api_basic_pass", "")
                 elif config["auth_type"] == "API Key":
-                    c1, c2 = st.columns(2)
-                    with c1:
-                        config["key_name"] = st.text_input("Nome do Header", value="X-API-Key")
-                    with c2:
-                        config["key_value"] = st.text_input("Valor da API Key", type="password")
-                config["headers"] = st.text_area(
-                    "Headers Adicionais (JSON)",
-                    value="{}",
-                    help='Ex: {"Accept": "application/json"}'
+                    config["key_name"] = st.session_state.get("api_key_name", "X-API-Key")
+                    config["key_value"] = st.session_state.get("api_key_value", "")
+                config["headers"] = st.session_state.get("api_headers", "{}")
+                config["endpoint_preview"] = st.text_input(
+                    "Endpoint de teste (opcional)",
+                    value=config.get("endpoint_preview", "/v2/api/Order/List"),
+                    placeholder="/v2/api/Order/List",
+                    help="Caminho do endpoint para testar a conexão"
                 )
 
             elif tipo == "copastur":
@@ -289,7 +309,7 @@ def gerenciar_fontes():
         fontes = query_native("fontes_dados", filters={"tenant_id": tenant_id})
         if not fontes.empty:
             for _, f in fontes.iterrows():
-                col1, col2 = st.columns([4, 1])
+                col1, col2, col3 = st.columns([3, 1, 1])
                 with col1:
                     st.markdown(f"**{f['nome']}** `{f['tipo']}`")
                     config = f.get("config", {})
@@ -298,6 +318,16 @@ def gerenciar_fontes():
                     if isinstance(config, dict) and "url" in config:
                         st.caption(config["url"])
                 with col2:
+                    if f["tipo"] == "api":
+                        if st.button("🧪", key=f"test_fonte_{f['id']}", help="Testar conexão"):
+                            with st.spinner("Testando..."):
+                                preview = preview_fonte(f["tipo"], config)
+                                if not preview.empty:
+                                    st.success(f"{len(preview)} registros")
+                                    st.dataframe(preview.head(10), use_container_width=True, height=200)
+                                else:
+                                    st.warning("Nenhum dado retornado")
+                with col3:
                     if st.button("🗑️", key=f"del_fonte_{f['id']}"):
                         from modules.database import delete_record
                         delete_record("fontes_dados", "id", f["id"])
@@ -340,12 +370,80 @@ def executar_dataset(dataset_id: str) -> pd.DataFrame:
         return query_supabase(sql)
     return pd.DataFrame()
 
+def fetch_api_endpoint(
+    base_url: str,
+    endpoint_path: str,
+    method: str = "GET",
+    auth_type: str = "Nenhuma",
+    auth_user: str = "",
+    auth_pass: str = "",
+    token: str = "",
+    key_name: str = "",
+    key_value: str = "",
+    headers_json: str = "{}",
+    params: dict = None
+) -> pd.DataFrame:
+    url = urljoin(base_url.rstrip("/"), endpoint_path)
+    headers = {"Accept": "application/json", "Content-Type": "application/json"}
+
+    try:
+        extra = json.loads(headers_json) if isinstance(headers_json, str) else headers_json
+        headers.update(extra)
+    except:
+        pass
+
+    if auth_type == "Bearer Token" and token:
+        headers["Authorization"] = f"Bearer {token}"
+    elif auth_type == "Basic Auth" and auth_user:
+        encoded = base64.b64encode(f"{auth_user}:{auth_pass}".encode()).decode()
+        headers["Authorization"] = f"Basic {encoded}"
+    elif auth_type == "API Key" and key_name and key_value:
+        headers[key_name] = key_value
+
+    try:
+        if method == "GET":
+            resp = requests.get(url, headers=headers, params=params, timeout=30, verify=False)
+        elif method == "POST":
+            resp = requests.post(url, headers=headers, json=params, timeout=30, verify=False)
+        else:
+            return pd.DataFrame()
+
+        if resp.status_code not in (200, 201):
+            return pd.DataFrame()
+
+        data = resp.json()
+
+        if isinstance(data, dict):
+            if "data" in data and isinstance(data["data"], list):
+                return pd.DataFrame(data["data"])
+            return pd.DataFrame([data])
+        elif isinstance(data, list):
+            return pd.DataFrame(data)
+
+        return pd.DataFrame()
+    except:
+        return pd.DataFrame()
+
+
 def preview_fonte(tipo: str, config: dict) -> pd.DataFrame:
     if tipo == "csv":
         return pd.DataFrame()
     elif tipo == "supabase":
         from modules.database import query_native
         return query_native(config.get("tabela", ""))
+    elif tipo == "api":
+        return fetch_api_endpoint(
+            base_url=config.get("url", ""),
+            endpoint_path=config.get("endpoint_preview", "/v2/api/Order/List"),
+            method=config.get("method", "GET"),
+            auth_type=config.get("auth_type", "Nenhuma"),
+            auth_user=config.get("auth_user", ""),
+            auth_pass=config.get("auth_pass", ""),
+            token=config.get("token", ""),
+            key_name=config.get("key_name", ""),
+            key_value=config.get("key_value", ""),
+            headers_json=config.get("headers", "{}"),
+        )
     elif tipo == "google_sheets":
         try:
             import gspread

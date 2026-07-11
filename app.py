@@ -1,4 +1,7 @@
+import os
 import streamlit as st
+
+_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 st.set_page_config(
     page_title="CLEVER-BI",
@@ -65,9 +68,11 @@ if user:
         st.markdown('</div>', unsafe_allow_html=True)
 
         # Logo + título
+        with open(os.path.join(_ROOT, "Logo-CleverBI.svg"), encoding="utf-8") as _f:
+            _logo_svg = _f.read()
         st.markdown(f"""
             <div class="sidebar-header">
-                <div class="sidebar-logo">📊</div>
+                <div class="sidebar-logo">{_logo_svg}</div>
                 <div>
                     <div class="sidebar-title">CLEVER</div>
                     <div class="sidebar-subtitle">{t('app.subtitulo')}</div>

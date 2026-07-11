@@ -1,6 +1,9 @@
+import os
 import streamlit as st
 import hashlib
 from modules.database import get_supabase, insert_record, query_native
+
+_AUTH_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def fazer_login(email: str, senha: str) -> bool:
     sb = get_supabase()
@@ -84,10 +87,11 @@ def registrar(email: str, senha: str, nome: str, empresa: str) -> bool:
 def login_screen():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.markdown("""
-            <div style="text-align:center;padding:2rem 0">
-                <h1 style="color:#e8edf5;font-size:2.5rem;margin:0">CLEVER</h1>
-                <p style="color:#4a7cf7;font-size:1rem">Business Intelligence</p>
+        with open(os.path.join(_AUTH_ROOT, "Logo-CleverBI.svg"), encoding="utf-8") as _f:
+            _login_logo = _f.read()
+        st.markdown(f"""
+            <div style="text-align:center;padding:1.5rem 0">
+                {_login_logo}
             </div>
         """, unsafe_allow_html=True)
 

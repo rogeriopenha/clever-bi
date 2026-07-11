@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import json
+from modules.database import query_native, get_tenant_id
 
 PALETA = px.colors.qualitative.Plotly
 
@@ -903,6 +904,55 @@ def editor_widget(widget_data: dict = None) -> dict:
     config = {}
     if widget_data and isinstance(widget_data.get("config"), dict):
         config = widget_data["config"]
+
+    with st.expander("📦 Fonte de Dados", expanded=True):
+        fontes = query_native("fontes_dados", filters={"tenant_id": get_tenant_id()})
+        fontes_opcoes = {f["id"]: f"{f['nome']} ({f['tipo']})" for _, f in fontes.iterrows()}
+        fontes_ids = list(fontes_opcoes.keys())
+        fonte_atual = config.get("fonte_id", "")
+        idx_fonte = fontes_ids.index(fonte_atual) if fonte_atual in fontes_ids else 0
+        fonte_id = st.selectbox(
+            "Selecionar fonte",
+            fontes_ids,
+            format_func=lambda x: fontes_opcoes.get(x, "Nenhuma"),
+            index=idx_fonte if fontes_ids else 0,
+            key="widget_fonte_id"
+        ) if fontes_ids else st.text_input("ID da fonte", value=fonte_atual, key="widget_fonte_id")
+
+        config["fonte_id"] = fonte_id
+
+        if fonte_id:
+            fonte_row = fontes[fontes["id"] == fonte_id]
+            if not fonte_row.empty:
+                fc = fonte_row.iloc[0]
+                fc_config = fc.get("config", {})
+                if isinstance(fc_config, str):
+                    fc_config = json.loads(fc_config)
+
+                if fc["tipo"] == "api":
+                    st.markdown("**🔌 Endpoint da API**")
+                    config["api_endpoint_path"] = st.text_input(
+                        "Caminho do endpoint",
+                        value=config.get("api_endpoint_path", "/v2/api/Order/List"),
+                        placeholder="/v2/api/Order/List",
+                        key="widget_api_path"
+                    )
+                    config["api_method"] = st.selectbox(
+                        "Método",
+                        ["GET", "POST"],
+                        index=0 if config.get("api_method", "GET") == "GET" else 1,
+                        key="widget_api_method"
+                    )
+                    params_default = config.get("api_params", "{}")
+                    if isinstance(params_default, dict):
+                        params_default = json.dumps(params_default)
+                    config["api_params"] = st.text_area(
+                        "Parâmetros da query (JSON)",
+                        value=params_default,
+                        placeholder='{"request_date_start": "2024-01-01", "request_date_end": "2024-12-31"}',
+                        help="Parâmetros enviados na query string da requisição",
+                        key="widget_api_params"
+                    )
 
     if tipo in ("kpi", "metric"):
         config["coluna_valor"] = st.text_input("Coluna de valor", value=config.get("coluna_valor", ""))

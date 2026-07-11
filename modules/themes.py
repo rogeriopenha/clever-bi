@@ -163,11 +163,11 @@ def css_tema() -> str:
             margin-bottom: 0.5rem;
         }}
         .sidebar-logo {{
-            font-size: 2rem; line-height: 1;
-            background: linear-gradient(135deg, {c["accent"]}, {c["accent_hover"]});
-            width: 44px; height: 44px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
+            display: flex; align-items: center; justify-content: flex-start;
             flex-shrink: 0;
+        }}
+        .sidebar-logo svg {{
+            height: 36px; width: auto;
         }}
         .sidebar-title {{
             font-size: 1.35rem; font-weight: 700; color: {c["text_primary"]};

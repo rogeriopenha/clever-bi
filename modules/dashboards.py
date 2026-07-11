@@ -260,6 +260,38 @@ def _carregar_dados_widget(widget) -> pd.DataFrame:
         from modules.database import query_supabase
         return query_supabase(sql)
 
+    fonte_id = config.get("fonte_id")
+    if fonte_id:
+        from modules.database import query_native
+        import json as _json
+        fontes = query_native("fontes_dados", filters={"id": fonte_id})
+        if not fontes.empty:
+            fonte = fontes.iloc[0]
+            fc = fonte.get("config", {})
+            if isinstance(fc, str):
+                fc = _json.loads(fc)
+            if fonte["tipo"] == "api" and config.get("api_endpoint_path"):
+                from modules.data_sources import fetch_api_endpoint
+                params = config.get("api_params", "{}")
+                if isinstance(params, str):
+                    try:
+                        params = _json.loads(params) if params.strip() else {}
+                    except:
+                        params = {}
+                return fetch_api_endpoint(
+                    base_url=fc.get("url", ""),
+                    endpoint_path=config["api_endpoint_path"],
+                    method=config.get("api_method", "GET"),
+                    auth_type=fc.get("auth_type", "Nenhuma"),
+                    auth_user=fc.get("auth_user", ""),
+                    auth_pass=fc.get("auth_pass", ""),
+                    token=fc.get("token", ""),
+                    key_name=fc.get("key_name", ""),
+                    key_value=fc.get("key_value", ""),
+                    headers_json=fc.get("headers", "{}"),
+                    params=params,
+                )
+
     col_valor = config.get("coluna_valor", "")
     if col_valor or config:
         dados_demo = _dados_demo()
