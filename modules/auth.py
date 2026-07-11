@@ -1,4 +1,5 @@
 import os
+import base64
 import streamlit as st
 import hashlib
 from modules.database import get_supabase, insert_record, query_native
@@ -87,8 +88,9 @@ def registrar(email: str, senha: str, nome: str, empresa: str) -> bool:
 def login_screen():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        with open(os.path.join(_AUTH_ROOT, "Logo-CleverBI.svg"), encoding="utf-8") as _f:
-            _login_logo = _f.read()
+        with open(os.path.join(_AUTH_ROOT, "Logo-CleverBI.svg"), "rb") as _f:
+            _b64 = base64.b64encode(_f.read()).decode("utf-8")
+        _login_logo = f'<img src="data:image/svg+xml;base64,{_b64}" style="height:60px;width:auto">'
         st.markdown(f"""
             <div style="text-align:center;padding:1.5rem 0">
                 {_login_logo}
