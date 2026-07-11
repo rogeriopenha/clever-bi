@@ -84,10 +84,35 @@ def registrar(email: str, senha: str, nome: str, empresa: str) -> bool:
 def login_screen():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
+        # INCLUSÃO DO LOGO VETORIAL COMPATÍVEL COM TEMA CLARO E ESCURO
         st.markdown("""
-            <div style="text-align:center;padding:2rem 0">
-                <h1 style="color:#e8edf5;font-size:2.5rem;margin:0">CLEVER</h1>
-                <p style="color:#4a7cf7;font-size:1rem">Business Intelligence</p>
+            <div style="text-align:center; padding:1rem 0 2rem 0; max-width:100%;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200" width="100%" style="max-width:320px; height:auto;">
+                  <defs>
+                    <linearGradient id="metalBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#0077B6" />
+                      <stop offset="100%" stop-color="#00B4D8" />
+                    </linearGradient>
+                    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stop-color="#FFFFFF" />
+                      <stop offset="100%" stop-color="#E2E8F0" />
+                    </linearGradient>
+                  </defs>
+                  <g transform="translate(40, 40)">
+                    <path d="M 70 20 A 50 50 0 1 0 70 120" fill="none" stroke="url(#metalBlue)" stroke-width="14" stroke-linecap="round"/>
+                    <rect x="45" y="75" width="10" height="25" rx="4" fill="#0077B6" />
+                    <rect x="62" y="55" width="10" height="45" rx="4" fill="#00B4D8" />
+                    <rect x="79" y="30" width="10" height="70" rx="4" fill="url(#metalBlue)" />
+                    <circle cx="84" cy="30" r="8" fill="#00F5D4" />
+                  </g>
+                  <text x="180" y="115" font-family="'Montserrat', 'Segoe UI', sans-serif" font-size="54" font-weight="800" fill="url(#textGrad)" letter-spacing="2">CLEVER</text>
+                  <line x1="435" y1="73" x2="435" y2="115" stroke="#CBD5E1" stroke-width="3" stroke-linecap="round" />
+                  <text x="455" y="112" font-family="'Montserrat', 'Segoe UI', sans-serif" font-size="42" font-weight="300" fill="#00B4D8" letter-spacing="4">BI</text>
+                  <g transform="translate(515, 75) scale(0.8)">
+                    <circle cx="10" cy="10" r="9" fill="none" stroke="#00B4D8" stroke-width="1.5"/>
+                    <path d="M 7 14 L 7 6 L 11 6 C 13 6, 14 7, 14 8.5 C 14 10, 13 11, 11 11 L 9 11 L 9 14 M 9 9 L 11 9 C 11.5 9, 12 8.8, 12 8.5 C 12 8.2, 11.5 8, 11 8 L 9 8 Z M 11 11 L 13.5 14" fill="none" stroke="#00B4D8" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+                  </g>
+                </svg>
             </div>
         """, unsafe_allow_html=True)
 
