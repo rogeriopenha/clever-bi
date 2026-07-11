@@ -163,13 +163,11 @@ def css_tema() -> str:
             margin-bottom: 0.5rem;
         }}
         .sidebar-logo {{
-            display: flex; align-items: center; justify-content: center;
-            width: 120px; height: 40px; border-radius: 8px;
-            background: #e2e8f0;
+            display: flex; align-items: center; justify-content: flex-start;
             flex-shrink: 0;
         }}
         .sidebar-logo img {{
-            height: 32px; width: auto;
+            height: 36px; width: auto;
         }}
         .sidebar-title {{
             font-size: 1.35rem; font-weight: 700; color: {c["text_primary"]};

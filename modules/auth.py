@@ -86,11 +86,18 @@ def registrar(email: str, senha: str, nome: str, empresa: str) -> bool:
     return False
 
 def login_screen():
+    st.markdown("""
+        <style>
+        section[data-testid="stAppViewContainer"] {
+            background: #f1f5f9;
+        }
+        </style>
+    """, unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         with open(os.path.join(_AUTH_ROOT, "Logo-CleverBI.svg"), "rb") as _f:
             _b64 = base64.b64encode(_f.read()).decode("utf-8")
-        _login_logo = f'<img src="data:image/svg+xml;base64,{_b64}" style="height:60px;width:auto">'
+        _login_logo = f'<img src="data:image/svg+xml;base64,{_b64}" style="height:36px;width:auto">'
         st.markdown(f"""
             <div style="text-align:center;padding:1.5rem 0">
                 {_login_logo}
